@@ -63,7 +63,7 @@
 import { ref, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
-import { useGotoRouter } from "src/composables/gotoRouter";
+import { useGotoRouter } from "src/composables/goToRouter";
 
 const leftDrawerOpen = ref(false);
 const { handleGoToPage } = useGotoRouter();

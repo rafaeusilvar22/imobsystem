@@ -100,7 +100,7 @@ import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { useBrandColorsStore } from "../stores/brandColors";
-import { useGotoRouter } from "src/composables/gotoRouter";
+import { useGotoRouter } from "src/composables/goToRouter";
 import { useEnterpriseStore } from "../stores/enterprise";
 import { supabase } from "../supabase";
 import { setCssVar } from "quasar";

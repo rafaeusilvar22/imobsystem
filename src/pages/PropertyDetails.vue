@@ -212,7 +212,7 @@ import { useRoute, useRouter } from "vue-router";
 import { usePropertyStore } from "../stores/property";
 import { useEnterpriseStore } from "../stores/enterprise";
 import { formattedCurrency } from "src/utils/globalFunctions";
-import { useGotoRouter } from "src/composables/gotoRouter";
+import { useGotoRouter } from "src/composables/goToRouter";
 import { useAuthStore } from "../stores/auth";
 import { useQuasar } from "quasar";
 
