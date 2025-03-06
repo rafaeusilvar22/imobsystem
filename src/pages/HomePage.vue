@@ -325,94 +325,93 @@
   </q-page>
 </template>
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import {formattedCurrency} from "src/utils/globalFunctions"
-import { useRouter } from 'vue-router'
-import { useRoute } from 'vue-router';
-import { useAuthStore } from '../stores/auth'
-import { usePropertyStore } from '../stores/property'
+import { ref, onMounted, computed } from "vue";
+import { formattedCurrency } from "src/utils/globalFunctions";
+import { useRouter } from "vue-router";
+import { useRoute } from "vue-router";
+import { useAuthStore } from "../stores/auth";
+import { useEnterpriseStore } from "../stores/enterprise";
+import { usePropertyStore } from "../stores/property";
 
 defineOptions({
-  name: 'HomePage',
-  layout: 'default',
-})
+  name: "HomePage",
+  layout: "default",
+});
 
+const authStore = useAuthStore();
+const propertyStore = usePropertyStore();
+const enterpriseStore = useEnterpriseStore();
+const router = useRouter();
+const route = useRoute();
 
-const authStore = useAuthStore()
-const propertyStore = usePropertyStore()
-const router = useRouter()
-const route = useRoute()
-
-const userId = route.params.userId;
-const searchQuery = ref('')
-const priceRange = ref([0, 5000000])
-const selectedType = ref(null)
-const selectedBedrooms = ref(null)
-const showFilters = ref(false)
+const enterpriseData = enterpriseStore.currentEnterpriseData;
+const searchQuery = ref("");
+const priceRange = ref([0, 5000000]);
+const selectedType = ref(null);
+const selectedBedrooms = ref(null);
+const showFilters = ref(false);
 
 onMounted(async () => {
-
-  await funFetchProperties()
-})
+  await funFetchProperties();
+  console.log(enterpriseData);
+});
 
 const featuredProperties = computed(() => {
-  return propertyStore.properties.filter(p => p.featured)
-})
+  return propertyStore.properties.filter((p) => p.featured);
+});
 
 const filteredProperties = computed(() => {
-  let filtered = propertyStore.properties
+  let filtered = propertyStore.properties;
 
   // Filter by search query (title or city)
   if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(p =>
-      p.title.toLowerCase().includes(query) ||
-      p.city.toLowerCase().includes(query)
-    )
+    const query = searchQuery.value.toLowerCase();
+    filtered = filtered.filter(
+      (p) =>
+        p.title.toLowerCase().includes(query) ||
+        p.city.toLowerCase().includes(query)
+    );
   }
 
   // Filter by price range
-  filtered = filtered.filter(p =>
-    p.price >= priceRange.value[0] &&
-    p.price <= priceRange.value[1]
-  )
+  filtered = filtered.filter(
+    (p) => p.price >= priceRange.value[0] && p.price <= priceRange.value[1]
+  );
 
   // Filter by type
   if (selectedType.value) {
-    filtered = filtered.filter(p => p.type === selectedType.value)
+    filtered = filtered.filter((p) => p.type === selectedType.value);
   }
 
   // Filter by bedrooms
   if (selectedBedrooms.value) {
-    filtered = filtered.filter(p => p.bedrooms >= selectedBedrooms.value)
+    filtered = filtered.filter((p) => p.bedrooms >= selectedBedrooms.value);
   }
 
-  return filtered
-})
+  return filtered;
+});
 
 // Busca o perfil e as propriedades do usuário
 const funFetchProperties = async () => {
   try {
-    // Busca as propriedades do usuário pelo user_id
-    await propertyStore.fetchProperties(userId);
+    await propertyStore.fetchProperties(enterpriseData.id);
   } catch (err) {
-    console.error('Erro ao buscar perfil ou propriedades:', err);
+    console.error("Erro ao buscar perfil ou propriedades:", err);
   }
 };
 
-
 function viewPropertyDetails(id) {
-  router.push(`/property/${id}`)
+  router.push(`/property/${id}`);
 }
 
 function toggleFilters() {
-  showFilters.value = !showFilters.value
+  showFilters.value = !showFilters.value;
 }
 
 function clearFilters() {
-  searchQuery.value = ''
-  priceRange.value = [0, 5000000]
-  selectedType.value = null
-  selectedBedrooms.value = null
+  searchQuery.value = "";
+  priceRange.value = [0, 5000000];
+  selectedType.value = null;
+  selectedBedrooms.value = null;
 }
 </script>

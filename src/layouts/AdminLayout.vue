@@ -34,7 +34,7 @@
           </q-item-section>
         </q-item>
 
-        <q-item @click="goToHome()" clickable>
+        <q-item @click="handleGoToPage('/home')" clickable>
           <q-item-section avatar>
             <q-icon name="exit_to_app" />
           </q-item-section>
@@ -60,29 +60,31 @@
   </q-layout>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { ref, onMounted } from "vue";
+import { useRouter } from "vue-router";
+import { useAuthStore } from "../stores/auth";
+import { useGotoRouter } from "src/composables/gotoRouter";
 
-const leftDrawerOpen = ref(false)
-const authStore = useAuthStore()
-const router = useRouter()
-const userId = authStore.user?.id
+const leftDrawerOpen = ref(false);
+const { handleGoToPage } = useGotoRouter();
+const authStore = useAuthStore();
+const router = useRouter();
+const userId = authStore.user?.id;
 
 function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value
+  leftDrawerOpen.value = !leftDrawerOpen.value;
 }
 
 onMounted(() => {
-  authStore.initialize()
-})
+  authStore.initialize();
+});
 
 async function logout() {
-  await authStore.logout()
-  router.push('/login')
+  await authStore.logout();
+  router.push("/login");
 }
 
 const goToHome = () => {
   router.push({ path: `/home/${userId}` });
-}
+};
 </script>

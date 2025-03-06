@@ -9,20 +9,20 @@ export const useBrandColorsStore = defineStore('user', () => {
   })
 
   const loadThemeColor = async (userId) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select("*")
-      .eq("id", userId)
-      .single()
+    // const { data, error } = await supabase
+    //   .from("enterprise")
+    //   .select("*")
+    //   .eq("id", userId)
+    //   .single()
 
-    if (error) {
-      console.error('Error loading theme color:', error)
-      return
-    }
+    // if (error) {
+    //   console.error('Error loading theme color:', error)
+    //   return
+    // }
 
-    currentEnterpriseData.value.themeColor = data
-    setCssVar("primary", data.primary_color) // Define a cor dinamicamente
-    setCssVar("secondary", data.secondary_color) // Define a cor dinamicamente
+    // currentEnterpriseData.value.themeColor = data
+    // setCssVar("primary", data.primary_color) // Define a cor dinamicamente
+    // setCssVar("secondary", data.secondary_color) // Define a cor dinamicamente
   }
 
   return {

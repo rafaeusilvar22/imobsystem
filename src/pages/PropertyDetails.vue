@@ -8,7 +8,11 @@
     <div v-else-if="property">
       <div class="q-mb-md">
         <q-breadcrumbs>
-          <q-breadcrumbs-el label="Início" icon="home" @click="goToHome" />
+          <q-breadcrumbs-el
+            label="Início"
+            icon="home"
+            @click="handleGoToPage('/home')"
+          />
           <q-breadcrumbs-el :label="property.title" />
         </q-breadcrumbs>
       </div>
@@ -203,114 +207,116 @@
   </q-page>
 </template>
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { usePropertyStore } from '../stores/property'
-import {formattedCurrency} from "src/utils/globalFunctions"
-import { useAuthStore } from '../stores/auth'
-import { useQuasar } from 'quasar'
+import { ref, computed, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { usePropertyStore } from "../stores/property";
+import { useEnterpriseStore } from "../stores/enterprise";
+import { formattedCurrency } from "src/utils/globalFunctions";
+import { useGotoRouter } from "src/composables/gotoRouter";
+import { useAuthStore } from "../stores/auth";
+import { useQuasar } from "quasar";
 
 defineOptions({
-  name: 'PropertyDetails',
-  layout: 'main'
-})
+  name: "PropertyDetails",
+  layout: "main",
+});
 
-const route = useRoute()
-const router = useRouter()
-const authStore = useAuthStore()
-const propertyStore = usePropertyStore()
-const $q = useQuasar()
+const route = useRoute();
+const router = useRouter();
+const authStore = useAuthStore();
+const propertyStore = usePropertyStore();
+const enterpriseStore = useEnterpriseStore();
+const { handleGoToPage } = useGotoRouter();
+const $q = useQuasar();
 
-const property = ref(null)
-const userId = ref(null)
-const loading = ref(true)
-const slide = ref(1)
-const similarProperties = ref([])
+const enterpriseData = enterpriseStore.currentEnterpriseData;
+const property = ref(null);
+const userId = ref(null);
+const loading = ref(true);
+const slide = ref(1);
+const similarProperties = ref([]);
 
 onMounted(async () => {
-  await loadProperty()
-})
+  await loadProperty();
+});
 
 async function loadProperty() {
-  loading.value = true
+  loading.value = true;
   try {
-    const propertyData = await propertyStore.getPropertyById(route.params.id)
+    const propertyData = await propertyStore.getPropertyById(route.params.id);
     if (!propertyData) {
       $q.notify({
-        type: 'negative',
-        message: 'Imóvel não encontrado'
-      })
-      router.push('/')
-      return
+        type: "negative",
+        message: "Imóvel não encontrado",
+      });
+      router.push("/");
+      return;
     }
-    property.value = propertyData
-    userId.value = propertyData.user_id
+    property.value = propertyData;
+    userId.value = propertyData.user_id;
     // Load similar properties
 
-    await propertyStore.fetchProperties(userId.value)
+    await propertyStore.fetchProperties(userId.value);
     similarProperties.value = propertyStore.properties
-      .filter(p =>
-        p.id !== property.value.id &&
-        p.type === property.value.type &&
-        p.bedrooms >= property.value.bedrooms - 1 &&
-        p.bedrooms <= property.value.bedrooms + 1
+      .filter(
+        (p) =>
+          p.id !== property.value.id &&
+          p.type === property.value.type &&
+          p.bedrooms >= property.value.bedrooms - 1 &&
+          p.bedrooms <= property.value.bedrooms + 1
       )
-      .slice(0, 3)
+      .slice(0, 3);
   } catch (error) {
-    console.error('Error loading property:', error)
+    console.error("Error loading property:", error);
     $q.notify({
-      type: 'negative',
-      message: 'Erro ao carregar o imóvel'
-    })
+      type: "negative",
+      message: "Erro ao carregar o imóvel",
+    });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
 function formatPrice(price, type) {
-  if (!price || !type) return ''
-  return type === 'rent'
-    ? `R$ ${price.toLocaleString('pt-BR')}/mês`
-    : `R$ ${price.toLocaleString('pt-BR')}`
+  if (!price || !type) return "";
+  return type === "rent"
+    ? `R$ ${price.toLocaleString("pt-BR")}/mês`
+    : `R$ ${price.toLocaleString("pt-BR")}`;
 }
 
 function getStatusLabel(status) {
-  if (!status) return ''
+  if (!status) return "";
   const statusMap = {
-    'available': 'Disponível',
-    'sold': 'Vendido',
-    'rented': 'Alugado',
-    'reserved': 'Reservado'
-  }
-  return statusMap[status] || status
+    available: "Disponível",
+    sold: "Vendido",
+    rented: "Alugado",
+    reserved: "Reservado",
+  };
+  return statusMap[status] || status;
 }
 
 function getStatusColor(status) {
-  if (!status) return ''
+  if (!status) return "";
   const colorMap = {
-    'available': 'positive',
-    'sold': 'negative',
-    'rented': 'secondary',
-    'reserved': 'warning'
-  }
-  return colorMap[status] || 'grey'
+    available: "positive",
+    sold: "negative",
+    rented: "secondary",
+    reserved: "warning",
+  };
+  return colorMap[status] || "grey";
 }
 
 function contactOwner() {
   $q.dialog({
-    title: 'Contato',
-    message: 'Deseja entrar em contato sobre este imóvel?',
+    title: "Contato",
+    message: "Deseja entrar em contato sobre este imóvel?",
     cancel: true,
-    persistent: true
+    persistent: true,
   }).onOk(() => {
     $q.notify({
-      type: 'positive',
-      message: 'Solicitação enviada! Em breve entraremos em contato.'
-    })
-  })
-}
-
-const goToHome = (username) => {
-  router.push({ path: `/home/${userId.value}` });
+      type: "positive",
+      message: "Solicitação enviada! Em breve entraremos em contato.",
+    });
+  });
 }
 </script>

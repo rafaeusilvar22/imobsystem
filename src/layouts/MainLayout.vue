@@ -8,7 +8,7 @@
           {{ currentEnterpriseData.enterprise }}
         </q-toolbar-title>
 
-        <q-btn flat round dense icon="home" @click="goToHome()" />
+        <q-btn flat round dense icon="home" @click="handleGoToPage('/home')" />
         <q-btn
           v-if="authStore.isAuthenticated"
           flat
@@ -38,7 +38,7 @@
       <q-list>
         <q-item-label header>Menu</q-item-label>
 
-        <q-item clickable @click="goToHome()">
+        <q-item clickable @click="handleGoToPage('/home')">
           <q-item-section avatar>
             <q-icon name="home" />
           </q-item-section>
@@ -68,15 +68,15 @@
           </q-item-section>
         </q-item>
 
-        <q-item v-if="!authStore.isAuthenticated" clickable to="/register">
-          <!-- <q-item-section avatar>
+        <!-- <q-item v-if="!authStore.isAuthenticated" clickable to="/register"> -->
+        <!-- <q-item-section avatar>
             <q-icon name="person_add" />
           </q-item-section> -->
-          <!-- <q-item-section>
+        <!-- <q-item-section>
             <q-item-label>Registrar</q-item-label>
             <q-item-label caption>Crie uma conta</q-item-label>
           </q-item-section> -->
-        </q-item>
+        <!-- </q-item> -->
 
         <q-item v-if="authStore.isAuthenticated" clickable @click="logout">
           <q-item-section avatar>
@@ -96,64 +96,63 @@
   </q-layout>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
-import { useBrandColorsStore } from '../stores/brandColors'
-import { supabase } from '../supabase'
+import { ref, onMounted } from "vue";
+import { useRouter, useRoute } from "vue-router";
+import { useAuthStore } from "../stores/auth";
+import { useBrandColorsStore } from "../stores/brandColors";
+import { useGotoRouter } from "src/composables/gotoRouter";
+import { useEnterpriseStore } from "../stores/enterprise";
+import { supabase } from "../supabase";
 import { setCssVar } from "quasar";
-import { Loading } from 'quasar'
+import { Loading } from "quasar";
 
-import {currentEnterpriseData} from 'src/composables/currentEnterpriseData'
+import { currentEnterpriseData } from "src/composables/currentEnterpriseData";
 
 defineOptions({
   name: "MainLayout",
 });
 
-const route = useRoute()
-const leftDrawerOpen = ref(false)
-const authStore = useAuthStore()
-const brandColorsStore = useBrandColorsStore()
-const userId = authStore.user?.id || route.params.userId
-const router = useRouter()
+const route = useRoute();
+const router = useRouter();
+const leftDrawerOpen = ref(false);
+const authStore = useAuthStore();
+const { handleGoToPage } = useGotoRouter();
+const enterpriseStore = useEnterpriseStore();
+const brandColorsStore = useBrandColorsStore();
+
+const enterpriseUrl = route.params.enterpriseUrl;
+const enterpriseData = enterpriseStore.currentEnterpriseData;
 
 const toggleLeftDrawer = () => {
-  leftDrawerOpen.value = !leftDrawerOpen.value
-}
+  leftDrawerOpen.value = !leftDrawerOpen.value;
+};
 
-onMounted(() => {
-  authStore.initialize()
-  funFetchProfile()
-})
+onMounted(async () => {
+  authStore.initialize();
+  await funFetchEnterprise();
+});
 
-
-const funFetchProfile = async () => {
-  Loading.show() // Show loading indicator
+const funFetchEnterprise = async () => {
+  Loading.show();
   try {
-    const profile = await authStore.fetchProfile(userId);
+    const respEnterprise = await enterpriseStore.fetchEnterprise(enterpriseUrl);
 
-    if (!profile) {
-      throw new Error("Perfil não encontrado.");
+    if (!respEnterprise) {
+      throw new Error("Empresa não encontrada.");
     }
 
-    currentEnterpriseData.value = profile
+    currentEnterpriseData.value = respEnterprise;
 
-    await brandColorsStore.loadThemeColor(userId) // Carrega a cor do tema
-
+    await brandColorsStore.loadThemeColor(enterpriseUrl); // Carrega a cor do tema
   } catch (err) {
     console.error("Erro ao buscar perfil ou propriedades:", err);
   } finally {
-    Loading.hide() // Hide loading indicator
+    Loading.hide();
   }
 };
 
 const logout = async () => {
- await authStore.logout()
-  router.push('/login')
-}
-
-const goToHome = () => {
-  router.push({ path: `/home/${userId}` });
-}
-
+  await authStore.logout();
+  router.push("/login");
+};
 </script>
