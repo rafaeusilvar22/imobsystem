@@ -25,7 +25,7 @@
               </q-input>
             </div>
 
-            <div class="col-12 col-md-3">
+            <div class="col-12 col-md-6">
               <q-select
                 v-model="selectedType"
                 :options="[
@@ -41,80 +41,7 @@
                 bg-color="white"
               />
             </div>
-
-            <div class="col-12 col-md-3">
-              <q-btn
-                color="secondary"
-                class="full-width"
-                label="Filtros avançados"
-                icon="filter_list"
-                @click="toggleFilters"
-              />
-            </div>
           </div>
-
-          <q-slide-transition>
-            <div v-show="showFilters" class="q-mt-md">
-              <q-separator class="q-my-md" />
-
-              <div class="row q-col-gutter-md">
-                <div class="col-12 col-md-6">
-                  <p class="q-mb-sm">Faixa de preço:</p>
-                  <q-range
-                    v-model="priceRange"
-                    :min="0"
-                    :max="5000000"
-                    :step="50000"
-                    label
-                    label-always
-                    color="secondary"
-                    :left-label-value="`R$ ${priceRange[0].toLocaleString(
-                      'pt-BR'
-                    )}`"
-                    :right-label-value="`R$ ${priceRange[1].toLocaleString(
-                      'pt-BR'
-                    )}`"
-                  />
-                </div>
-
-                <div class="col-12 col-md-6">
-                  <q-select
-                    v-model="selectedBedrooms"
-                    :options="[
-                      { label: 'Qualquer quantidade', value: null },
-                      { label: '1+ quartos', value: 1 },
-                      { label: '2+ quartos', value: 2 },
-                      { label: '3+ quartos', value: 3 },
-                      { label: '4+ quartos', value: 4 },
-                    ]"
-                    outlined
-                    dense
-                    map-options
-                    emit-value
-                    label="Quartos"
-                    bg-color="white"
-                  />
-                </div>
-              </div>
-
-              <div class="row q-mt-md">
-                <div class="col-12 text-right">
-                  <q-btn
-                    flat
-                    label="Limpar filtros"
-                    color="grey-7"
-                    @click="clearFilters"
-                    class="q-mr-sm"
-                  />
-                  <q-btn
-                    color="primary"
-                    label="Aplicar filtros"
-                    @click="toggleFilters"
-                  />
-                </div>
-              </div>
-            </div>
-          </q-slide-transition>
         </q-card>
       </div>
     </div>
@@ -226,15 +153,7 @@
         <h2 class="text-h4 q-mb-xs">Todos os Imóveis</h2>
         <p class="text-subtitle1 q-mb-lg">
           {{ filteredProperties.length }} imóveis encontrados
-          <span
-            v-if="
-              searchQuery ||
-              selectedType ||
-              selectedBedrooms ||
-              priceRange[0] > 0 ||
-              priceRange[1] < 5000000
-            "
-          >
+          <span v-if="searchQuery || selectedType">
             com os filtros aplicados
           </span>
         </p>
@@ -325,10 +244,9 @@
   </q-page>
 </template>
 <script setup>
-import { ref, onMounted, computed } from "vue";
+import { ref, computed, watch } from "vue";
 import { formattedCurrency } from "src/utils/globalFunctions";
 import { useRouter } from "vue-router";
-import { useRoute } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { useEnterpriseStore } from "../stores/enterprise";
 import { usePropertyStore } from "../stores/property";
@@ -342,19 +260,31 @@ const authStore = useAuthStore();
 const propertyStore = usePropertyStore();
 const enterpriseStore = useEnterpriseStore();
 const router = useRouter();
-const route = useRoute();
 
-const enterpriseData = enterpriseStore.currentEnterpriseData;
+const enterpriseData = computed(() => enterpriseStore.currentEnterpriseData);
 const searchQuery = ref("");
-const priceRange = ref([0, 5000000]);
 const selectedType = ref(null);
-const selectedBedrooms = ref(null);
-const showFilters = ref(false);
 
-onMounted(async () => {
-  await funFetchProperties();
-  console.log(enterpriseData);
-});
+const funFetchProperties = async () => {
+  try {
+    if (enterpriseData.value && enterpriseData.value.id) {
+      await propertyStore.fetchProperties(enterpriseData.value.id);
+    }
+  } catch (err) {
+    console.error("Erro ao buscar perfil ou propriedades:", err);
+  }
+};
+
+// Observa quando enterpriseData está disponível para buscar propriedades
+watch(
+  enterpriseData,
+  (newValue) => {
+    if (newValue && newValue.id) {
+      funFetchProperties();
+    }
+  },
+  { immediate: true }
+);
 
 const featuredProperties = computed(() => {
   return propertyStore.properties.filter((p) => p.featured);
@@ -363,7 +293,6 @@ const featuredProperties = computed(() => {
 const filteredProperties = computed(() => {
   let filtered = propertyStore.properties;
 
-  // Filter by search query (title or city)
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase();
     filtered = filtered.filter(
@@ -373,45 +302,14 @@ const filteredProperties = computed(() => {
     );
   }
 
-  // Filter by price range
-  filtered = filtered.filter(
-    (p) => p.price >= priceRange.value[0] && p.price <= priceRange.value[1]
-  );
-
-  // Filter by type
   if (selectedType.value) {
     filtered = filtered.filter((p) => p.type === selectedType.value);
-  }
-
-  // Filter by bedrooms
-  if (selectedBedrooms.value) {
-    filtered = filtered.filter((p) => p.bedrooms >= selectedBedrooms.value);
   }
 
   return filtered;
 });
 
-// Busca o perfil e as propriedades do usuário
-const funFetchProperties = async () => {
-  try {
-    await propertyStore.fetchProperties(enterpriseData.id);
-  } catch (err) {
-    console.error("Erro ao buscar perfil ou propriedades:", err);
-  }
-};
-
 function viewPropertyDetails(id) {
   router.push(`/property/${id}`);
-}
-
-function toggleFilters() {
-  showFilters.value = !showFilters.value;
-}
-
-function clearFilters() {
-  searchQuery.value = "";
-  priceRange.value = [0, 5000000];
-  selectedType.value = null;
-  selectedBedrooms.value = null;
 }
 </script>
