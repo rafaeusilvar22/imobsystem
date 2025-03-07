@@ -5,16 +5,24 @@
         <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
 
         <q-toolbar-title>
-          {{ currentEnterpriseData.enterprise }}
+          {{ enterpriseData.enterprise }}
         </q-toolbar-title>
 
-        <q-btn flat round dense icon="home" @click="handleGoToPage('/home')" />
+        <q-btn
+          flat
+          round
+          dense
+          icon="fa-solid fa-home"
+          size="sm"
+          @click="handleGoToPage('/home')"
+        />
         <q-btn
           v-if="authStore.isAuthenticated"
           flat
           round
           dense
-          icon="admin_panel_settings"
+          icon="fa-solid fa-user-tie"
+          size="sm"
           to="/admin"
         />
         <q-btn
@@ -68,16 +76,6 @@
           </q-item-section>
         </q-item>
 
-        <!-- <q-item v-if="!authStore.isAuthenticated" clickable to="/register"> -->
-        <!-- <q-item-section avatar>
-            <q-icon name="person_add" />
-          </q-item-section> -->
-        <!-- <q-item-section>
-            <q-item-label>Registrar</q-item-label>
-            <q-item-label caption>Crie uma conta</q-item-label>
-          </q-item-section> -->
-        <!-- </q-item> -->
-
         <q-item v-if="authStore.isAuthenticated" clickable @click="logout">
           <q-item-section avatar>
             <q-icon name="logout" />
@@ -95,6 +93,7 @@
     </q-page-container>
   </q-layout>
 </template>
+
 <script setup>
 import { ref, onMounted } from "vue";
 import { useRouter, useRoute } from "vue-router";
@@ -105,8 +104,6 @@ import { useEnterpriseStore } from "../stores/enterprise";
 import { supabase } from "../supabase";
 import { setCssVar } from "quasar";
 import { Loading } from "quasar";
-
-import { currentEnterpriseData } from "src/composables/currentEnterpriseData";
 
 defineOptions({
   name: "MainLayout",
@@ -120,7 +117,11 @@ const { handleGoToPage } = useGotoRouter();
 const enterpriseStore = useEnterpriseStore();
 const brandColorsStore = useBrandColorsStore();
 
-const enterpriseUrl = route.params.enterpriseUrl;
+const enterpriseUrl = ref(
+  route.params.enterpriseUrl ||
+    enterpriseStore.enterpriseUrl ||
+    localStorage.getItem("enterpriseUrl")
+);
 const enterpriseData = enterpriseStore.currentEnterpriseData;
 
 const toggleLeftDrawer = () => {
@@ -129,21 +130,26 @@ const toggleLeftDrawer = () => {
 
 onMounted(async () => {
   authStore.initialize();
-  await funFetchEnterprise();
+  if (enterpriseUrl.value) {
+    await funFetchEnterprise();
+  }
 });
 
 const funFetchEnterprise = async () => {
   Loading.show();
   try {
-    const respEnterprise = await enterpriseStore.fetchEnterprise(enterpriseUrl);
+    const respEnterprise = await enterpriseStore.fetchEnterprise(
+      enterpriseUrl.value
+    );
 
     if (!respEnterprise) {
       throw new Error("Empresa não encontrada.");
     }
 
-    currentEnterpriseData.value = respEnterprise;
+    enterpriseStore.currentEnterpriseData.value = respEnterprise;
+    localStorage.setItem("enterpriseUrl", enterpriseUrl.value);
 
-    await brandColorsStore.loadThemeColor(enterpriseUrl); // Carrega a cor do tema
+    await brandColorsStore.loadThemeColor(enterpriseUrl.value); // Carrega a cor do tema
   } catch (err) {
     console.error("Erro ao buscar perfil ou propriedades:", err);
   } finally {

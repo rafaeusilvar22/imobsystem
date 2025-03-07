@@ -78,17 +78,25 @@
 
               <div class="row q-col-gutter-sm">
                 <div class="col-4 text-center">
-                  <q-icon name="bed" size="md" />
+                  <q-icon name="fa-solid fa-bed" size="sm" color="secondary" />
                   <div class="text-body1">{{ property.bedrooms }}</div>
                   <div class="text-caption">Quartos</div>
                 </div>
                 <div class="col-4 text-center">
-                  <q-icon name="bathroom" size="md" />
+                  <q-icon
+                    name="fa-solid fa-toilet"
+                    size="sm"
+                    color="secondary"
+                  />
                   <div class="text-body1">{{ property.bathrooms }}</div>
                   <div class="text-caption">Banheiros</div>
                 </div>
                 <div class="col-4 text-center">
-                  <q-icon name="square_foot" size="md" />
+                  <q-icon
+                    name="fa-solid fa-ruler-combined"
+                    size="sm"
+                    color="secondary"
+                  />
                   <div class="text-body1">{{ property.area }}</div>
                   <div class="text-caption">m²</div>
                 </div>

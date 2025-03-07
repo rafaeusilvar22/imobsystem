@@ -46,107 +46,6 @@
       </div>
     </div>
 
-    <!-- Featured Properties -->
-    <div class="q-pa-md q-mt-lg">
-      <div class="text-center">
-        <h2 class="text-h4 q-mb-xs">Imóveis em Destaque</h2>
-        <p class="text-subtitle1 q-mb-lg">
-          Confira nossas melhores opções selecionadas para você
-        </p>
-      </div>
-
-      <div v-if="propertyStore.loading" class="text-center q-pa-xl">
-        <q-spinner color="primary" size="3em" />
-        <p class="q-mt-sm">Carregando imóveis...</p>
-      </div>
-
-      <div
-        v-else-if="featuredProperties.length === 0"
-        class="text-center q-pa-xl"
-      >
-        <q-icon name="apartment" size="4rem" color="grey-5" />
-        <p class="text-h6 q-mt-md">Nenhum imóvel em destaque no momento</p>
-      </div>
-
-      <div v-else class="row q-col-gutter-lg">
-        <div
-          v-for="property in featuredProperties"
-          :key="property.id"
-          class="col-12 col-md-4"
-        >
-          <q-card
-            class="property-card cursor-pointer"
-            @click="viewPropertyDetails(property.id)"
-          >
-            <q-img
-              :src="
-                property.images && property.images.length > 0
-                  ? property.images[0]
-                  : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3'
-              "
-              :ratio="16 / 9"
-              basic
-            >
-              <div class="absolute-top-left bg-transparent q-pa-sm">
-                <q-badge color="secondary" v-if="property.featured">
-                  Destaque
-                </q-badge>
-              </div>
-
-              <div class="absolute-top-right bg-transparent q-pa-sm">
-                <q-badge color="primary" v-if="property.type === 'sale'">
-                  Venda
-                </q-badge>
-                <q-badge color="accent" v-else> Aluguel </q-badge>
-              </div>
-
-              <div
-                class="absolute-bottom text-subtitle2 text-center"
-                style="background-color: rgba(0, 0, 0, 0.7)"
-              >
-                {{ property.city }}, {{ property.state }}
-              </div>
-            </q-img>
-
-            <q-card-section>
-              <div class="text-h6 ellipsis-2-lines">{{ property.title }}</div>
-              <div class="text-subtitle1 text-primary q-mt-sm">
-                {{ formattedCurrency(property.price) }}
-              </div>
-
-              <div class="row q-mt-md">
-                <div class="col text-center">
-                  <q-icon name="bed" size="sm" />
-                  <div class="text-caption">
-                    {{ property.bedrooms }} quartos
-                  </div>
-                </div>
-                <div class="col text-center">
-                  <q-icon name="bathroom" size="sm" />
-                  <div class="text-caption">
-                    {{ property.bathrooms }} banheiros
-                  </div>
-                </div>
-                <div class="col text-center">
-                  <q-icon name="square_foot" size="sm" />
-                  <div class="text-caption">{{ property.area }} m²</div>
-                </div>
-              </div>
-            </q-card-section>
-
-            <q-card-actions>
-              <q-btn
-                flat
-                color="primary"
-                label="Ver detalhes"
-                class="full-width"
-              />
-            </q-card-actions>
-          </q-card>
-        </div>
-      </div>
-    </div>
-
     <!-- All Properties -->
     <div class="q-pa-md q-mt-lg">
       <div class="text-center">
@@ -186,52 +85,10 @@
           :key="property.id"
           class="col-12 col-md-4 col-lg-3"
         >
-          <q-card
-            class="property-card cursor-pointer"
+          <real-estate-card
+            :property="property"
             @click="viewPropertyDetails(property.id)"
-          >
-            <q-img
-              :src="
-                property.images && property.images.length > 0
-                  ? property.images[0]
-                  : 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3'
-              "
-              :ratio="16 / 9"
-              basic
-            >
-              <div class="absolute-top-right bg-transparent q-pa-sm">
-                <q-badge color="primary" v-if="property.type === 'sale'">
-                  Venda
-                </q-badge>
-                <q-badge color="accent" v-else> Aluguel </q-badge>
-              </div>
-            </q-img>
-
-            <q-card-section>
-              <div class="text-h6 ellipsis-2-lines">{{ property.title }}</div>
-              <div class="text-subtitle2">
-                {{ property.city }}, {{ property.state }}
-              </div>
-              <div class="text-subtitle1 text-primary q-mt-sm">
-                {{ formattedCurrency(property.price) }}
-              </div>
-
-              <div class="row q-mt-md">
-                <div class="col text-center">
-                  <q-icon name="bed" size="sm" />
-                  <div class="text-caption">{{ property.bedrooms }}</div>
-                </div>
-                <div class="col text-center">
-                  <q-icon name="bathroom" size="sm" />
-                  <div class="text-caption">{{ property.bathrooms }}</div>
-                </div>
-                <div class="col text-center">
-                  <q-icon name="square_foot" size="sm" />
-                  <div class="text-caption">{{ property.area }} m²</div>
-                </div>
-              </div>
-            </q-card-section>
-          </q-card>
+          />
         </div>
       </div>
     </div>
@@ -246,6 +103,7 @@
 <script setup>
 import { ref, computed, watch } from "vue";
 import { formattedCurrency } from "src/utils/globalFunctions";
+import RealEstateCard from "src/components/Card/RealEstateCard.vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/auth";
 import { useEnterpriseStore } from "../stores/enterprise";
@@ -285,10 +143,6 @@ watch(
   },
   { immediate: true }
 );
-
-const featuredProperties = computed(() => {
-  return propertyStore.properties.filter((p) => p.featured);
-});
 
 const filteredProperties = computed(() => {
   let filtered = propertyStore.properties;

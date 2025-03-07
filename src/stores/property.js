@@ -59,7 +59,6 @@ export const usePropertyStore = defineStore('property', () => {
 
       properties.value = data;
 
-      console.log('Properties:', properties.value);
     } catch (err) {
       error.value = err.message;
       $q.notify({

@@ -1,1 +1,9 @@
 // app global css in SCSS form
+
+.zoom-effect {
+  transition: transform 0.3s ease-in-out;
+}
+
+.zoom-effect:hover {
+  transform: scale(1.02);
+}

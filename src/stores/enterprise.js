@@ -5,18 +5,23 @@ import { setCssVar } from 'quasar'
 
 export const useEnterpriseStore = defineStore('enterprise', () => {
   const currentEnterpriseData = ref(null)
+  const enterpriseUrl = ref(null)
 
-  const fetchEnterprise = async (enterpriseUrl) => {
+  const fetchEnterprise = async (url) => {
     try {
       const { data, error } = await supabase
         .from("enterprise")
         .select("*")
-        .eq("identification_url", enterpriseUrl)
+        .eq("identification_url", url)
         .single()
 
       if (error) throw error
 
       currentEnterpriseData.value = data
+      enterpriseUrl.value = url
+
+      localStorage.setItem('enterpriseUrl', url)
+
 
       // Define as cores dinamicamente
       if (data) {
@@ -94,7 +99,10 @@ export const useEnterpriseStore = defineStore('enterprise', () => {
         return null;
       }
 
+      localStorage.setItem("enterpriseUrl", currentEnterpriseData.value.identification_url);
+
       return data;
+
     } catch (error) {
       console.error('Erro ao atualizar perfil:', error);
       return null;
